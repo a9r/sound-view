@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- saved from url=(0055)https://voicenote.in/live/mic_setting_in_voicenote.html -->
+<html><head><meta charset="UTF-8"><title>sound view</title><style>#analyser{width:100%;height:200px;border:1px solid silver}</style>
+<script>
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+var audioContext = new AudioContext, audioInput = null, realAudioInput = null, inputPoint = null, rafID = null, analyserContext = null, canvasWidth, canvasHeight, recIndex = 0;
+function updateAnalysers(a) {
+    analyserContext || (a = document.getElementById("analyser"), canvasWidth = a.width, canvasHeight = a.height, analyserContext = a.getContext("2d"));
+    a = Math.round((canvasWidth + 400) / 6);
+    var b = new Uint8Array(analyserNode.frequencyBinCount);
+    analyserNode.getByteFrequencyData(b);
+    analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
+    for (var c = analyserNode.frequencyBinCount / a, e = 0;e < a;++e) {
+        for (var d = 0, g = Math.floor(e * c), f = 0;f < c;f++) {
+            d += b[g + f];
+        }
+        d /= c;
+        analyserContext.fillStyle = "#3998F5";
+        analyserContext.fillRect(6 * e + 10, canvasHeight - 10, 3, 2 * -d);
+    }
+    rafID = window.requestAnimationFrame(updateAnalysers);
+}
+
+function gotStream(a) {
+    inputPoint = audioContext.createGain();
+    audioInput = realAudioInput = audioContext.createMediaStreamSource(a);
+    audioInput.connect(inputPoint);
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 1024;
+    inputPoint.connect(analyserNode);
+    zeroGain = audioContext.createGain();
+    zeroGain.gain.value = 0;
+    inputPoint.connect(zeroGain);
+    zeroGain.connect(audioContext.destination);
+    updateAnalysers();
+}
+function initAudio() {
+    navigator.getUserMedia || (navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia);
+    navigator.cancelAnimationFrame || (navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame);
+    navigator.requestAnimationFrame || (navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame);
+    navigator.getUserMedia({audio:!0}, gotStream, function(a) {
+        alert("provide access to the microphone");
+    });
+}
+window.addEventListener("load", initAudio);
+</script>
+</head><body><canvas id="analyser" width="1024" height="780"></canvas></body></html>
